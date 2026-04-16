@@ -1,0 +1,74 @@
+{
+  "name": "@veridex/agent-security",
+  "version": "0.1.1",
+  "description": "Framework-agnostic agent security gateway — protect any AI agent with Veridex security packs, regardless of framework",
+  "license": "MIT",
+  "author": "Veridex Team",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    },
+    "./adapters/langchain": {
+      "types": "./dist/adapters/langchain.d.ts",
+      "import": "./dist/adapters/langchain.mjs",
+      "require": "./dist/adapters/langchain.js"
+    },
+    "./adapters/crewai": {
+      "types": "./dist/adapters/crewai.d.ts",
+      "import": "./dist/adapters/crewai.mjs",
+      "require": "./dist/adapters/crewai.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "hono": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "hono": "^4.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "agent",
+    "security",
+    "ai",
+    "llm",
+    "langchain",
+    "crewai",
+    "autogpt",
+    "guardrails",
+    "prompt-injection",
+    "tool-poisoning",
+    "veridex"
+  ]
+}
