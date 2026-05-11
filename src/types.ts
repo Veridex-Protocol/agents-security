@@ -114,6 +114,8 @@ export interface SecurityCheckResult {
   riskContribution: number;
   /** Which security pack produced this result */
   packId?: string;
+  /** Optional structured metadata (e.g. rate-limit key, canary hits). */
+  metadata?: Record<string, unknown>;
 }
 
 /** Complete evaluation result. */
@@ -185,6 +187,37 @@ export interface SecurityGatewayConfig {
   allowOfflineGracePeriod?: boolean;
   /** Offline grace period in ms (default: 24h). After this, evaluations block. */
   offlineGracePeriodMs?: number;
+
+  // ── Rate limiting ──
+
+  /**
+   * Per-tenant / per-agent rate limit applied as a pre-check before any pack
+   * runs. Omit to disable. If both `rateLimit` and `rateLimiter` are provided,
+   * `rateLimiter` wins.
+   */
+  rateLimit?: {
+    /** Tokens the bucket holds (burst size). */
+    capacity: number;
+    /** Tokens refilled per second. */
+    refillPerSecond: number;
+    /**
+     * Key to group requests by. Default 'tenant' → falls back to `agentId` if
+     * `tenantId` is missing. 'agent' always keys by `agentId`.
+     */
+    keyBy?: 'tenant' | 'agent' | ((ctx: import('./types').SecurityEvalContext) => string);
+  };
+  /**
+   * Plug in a custom rate limiter (e.g. Redis-backed). If present, overrides
+   * the in-memory token-bucket built from `rateLimit`.
+   */
+  rateLimiter?: {
+    consume(key: string, cost?: number): { allowed: boolean; remaining: number; capacity: number; retryAfterSeconds?: number } | Promise<{ allowed: boolean; remaining: number; capacity: number; retryAfterSeconds?: number }>;
+    /**
+     * Key function for the custom limiter. Required when `rateLimiter` is
+     * set without matching `rateLimit.keyBy`.
+     */
+    keyFn?: (ctx: import('./types').SecurityEvalContext) => string;
+  };
 }
 
 // ── Client Configuration ──

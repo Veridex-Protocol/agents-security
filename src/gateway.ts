@@ -36,6 +36,11 @@ import type {
   ContentScanResult,
 } from './types';
 import { createDefaultPacks } from './packs';
+import {
+  TokenBucketRateLimiter,
+  type RateLimiter,
+  type TokenBucketConfig,
+} from './rateLimiter';
 
 /** Verdict severity (higher = more severe). */
 const VERDICT_SEVERITY: Record<SecurityVerdict, number> = {
@@ -57,6 +62,10 @@ export class SecurityGateway {
   private licenseLastChecked = 0;
   private licenseGraceStart = 0;
   private licenseCheckPromise: Promise<void> | null = null;
+
+  // ── Rate limiting ──
+  private readonly rateLimiter: RateLimiter | null;
+  private readonly rateLimitKeyFn: ((ctx: SecurityEvalContext) => string) | null;
 
   constructor(config?: SecurityGatewayConfig) {
     this.config = config ?? {};
@@ -83,6 +92,33 @@ export class SecurityGateway {
       // No license key — allow local/dev usage with reduced packs
       this.licenseValid = true;
     }
+
+    // ── Build the rate limiter (in-memory unless caller injects one) ──
+    if (config?.rateLimiter) {
+      this.rateLimiter = config.rateLimiter as RateLimiter;
+      this.rateLimitKeyFn = config.rateLimiter.keyFn
+        ?? this.resolveKeyFn(config.rateLimit?.keyBy);
+    } else if (config?.rateLimit) {
+      const bucketCfg: TokenBucketConfig = {
+        capacity: config.rateLimit.capacity,
+        refillPerSecond: config.rateLimit.refillPerSecond,
+      };
+      this.rateLimiter = new TokenBucketRateLimiter(bucketCfg);
+      this.rateLimitKeyFn = this.resolveKeyFn(config.rateLimit.keyBy);
+    } else {
+      this.rateLimiter = null;
+      this.rateLimitKeyFn = null;
+    }
+  }
+
+  /** Resolve the keying strategy for the rate limiter. */
+  private resolveKeyFn(
+    keyBy?: 'tenant' | 'agent' | ((ctx: SecurityEvalContext) => string),
+  ): (ctx: SecurityEvalContext) => string {
+    if (typeof keyBy === 'function') return keyBy;
+    if (keyBy === 'agent') return (ctx) => `agent:${ctx.agent.agentId}`;
+    // Default: prefer tenant, fall back to agent.
+    return (ctx) => `tenant:${ctx.agent.tenantId ?? ctx.agent.agentId}`;
   }
 
   // ── Core Evaluation ──
@@ -168,6 +204,43 @@ export class SecurityGateway {
    * This is the primary entrypoint for any agent framework.
    */
   async evaluate(ctx: SecurityEvalContext): Promise<SecurityEvalResult> {
+    // ── Rate-limit pre-check (runs before license/packs so hot callers are
+    //    cheap to reject and can't mask a compromised key by burning quota). ──
+    if (this.rateLimiter && this.rateLimitKeyFn) {
+      const key = this.rateLimitKeyFn(ctx);
+      const decision = await this.rateLimiter.consume(key, 1);
+      if (!decision.allowed) {
+        const retryStr = decision.retryAfterSeconds !== undefined
+          ? ` Retry after ~${decision.retryAfterSeconds.toFixed(2)}s.`
+          : '';
+        return {
+          verdict: 'block',
+          riskScore: 1.0,
+          reasons: [
+            `Rate limit exceeded for ${key} (capacity=${decision.capacity}).${retryStr}`,
+          ],
+          checks: [{
+            checkId: 'system:rate-limit',
+            checkName: 'Rate Limit',
+            passed: false,
+            verdict: 'block',
+            reason: `Rate limit exceeded (capacity=${decision.capacity}, remaining=${decision.remaining}).${retryStr}`,
+            riskContribution: 1.0,
+            packId: 'system:rate-limit',
+            metadata: {
+              rateLimitKey: key,
+              capacity: decision.capacity,
+              remaining: decision.remaining,
+              retryAfterSeconds: decision.retryAfterSeconds,
+            },
+          }],
+          packsEvaluated: ['system:rate-limit'],
+          evaluatedAt: Date.now(),
+          durationMs: 0,
+        };
+      }
+    }
+
     // ── License enforcement ──
     await this.ensureLicenseValid();
     if (this.config.licenseKey && !this.licenseValid) {

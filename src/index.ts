@@ -44,6 +44,24 @@ export type { EvaluateListener } from './gateway';
 export { SecurityClient } from './client';
 export { TelemetryReporter } from './telemetry';
 
+// ── Hardened fetch wrapper ──
+export { createSecureFetch, SecureFetchViolationError } from './secureFetch';
+export type {
+  FetchFn,
+  CanaryScanFn,
+  CanaryScanResult,
+  TLSValidatorFn,
+  TLSValidationResult,
+  ViolationPolicy,
+  ViolationListener,
+  SecureFetchViolation,
+  SecureFetchOptions,
+} from './secureFetch';
+
+// ── Rate limiting ──
+export { TokenBucketRateLimiter } from './rateLimiter';
+export type { RateLimiter, RateLimitDecision, TokenBucketConfig } from './rateLimiter';
+
 // ── Types ──
 export type {
   // Agent identity
