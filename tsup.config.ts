@@ -1,0 +1,15 @@
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: [
+    'src/index.ts',
+    'src/server.ts',
+    'src/adapters/langchain.ts',
+    'src/adapters/crewai.ts',
+  ],
+  format: ['cjs', 'esm'],
+  dts: true,
+  clean: true,
+  sourcemap: true,
+  target: 'es2022',
+});
