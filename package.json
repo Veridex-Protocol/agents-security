@@ -74,11 +74,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Veridex-Protocol/agent-security.git"
+    "url": "git+https://github.com/Veridex-Protocol/agents-security.git"
   },
-  "homepage": "https://github.com/Veridex-Protocol/agent-security#readme",
+  "homepage": "https://github.com/Veridex-Protocol/agents-security#readme",
   "bugs": {
-    "url": "https://github.com/Veridex-Protocol/agent-security/issues"
+    "url": "https://github.com/Veridex-Protocol/agents-security/issues"
   },
   "publishConfig": {
     "access": "public"
