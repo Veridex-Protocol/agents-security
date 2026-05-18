@@ -40,7 +40,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {},
   "peerDependencies": {
@@ -70,5 +71,19 @@
     "prompt-injection",
     "tool-poisoning",
     "veridex"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Veridex-Protocol/agent-security.git"
+  },
+  "homepage": "https://github.com/Veridex-Protocol/agent-security#readme",
+  "bugs": {
+    "url": "https://github.com/Veridex-Protocol/agent-security/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
