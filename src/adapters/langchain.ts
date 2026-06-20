@@ -98,7 +98,7 @@ export class VeridexLangChainGuard {
     if (this.config.gateway) {
       result = await this.config.gateway.evaluate(action);
     } else {
-      result = await this.config.client!.evaluate(action);
+      result = await this.config.client?.evaluate(action);
     }
 
     const blocked = result.verdict === 'block';
@@ -182,11 +182,10 @@ export class VeridexLangChainGuard {
    * Works with any object that has a `name` and `invoke(input)` method.
    */
   wrapTool<T extends { name: string; invoke: (input: any) => Promise<any> }>(tool: T): T {
-    const guard = this;
     const originalInvoke = tool.invoke.bind(tool);
 
-    (tool as any).invoke = async function (input: any) {
-      await guard.beforeToolCall(
+    (tool as any).invoke = async (input: any) => {
+      await this.beforeToolCall(
         tool.name,
         typeof input === 'object' ? input : { input },
       );

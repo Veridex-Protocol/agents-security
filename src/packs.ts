@@ -14,7 +14,6 @@ import type {
   SecurityEvalContext,
   SecurityCheckResult,
   SecurityVerdict,
-  ActionType,
 } from './types';
 
 // ── Helpers ──
