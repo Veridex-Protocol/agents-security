@@ -98,7 +98,7 @@ export class VeridexLangChainGuard {
     if (this.config.gateway) {
       result = await this.config.gateway.evaluate(action);
     } else {
-      result = await this.config.client?.evaluate(action);
+      result = (await this.config.client!.evaluate(action))!;
     }
 
     const blocked = result.verdict === 'block';

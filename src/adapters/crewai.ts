@@ -84,7 +84,7 @@ export class VeridexCrewAIGuard {
     if (this.config.gateway) {
       result = await this.config.gateway.evaluate(ctx);
     } else {
-      result = await this.config.client?.evaluate(ctx);
+      result = (await this.config.client!.evaluate(ctx))!;
     }
 
     const blocked = result.verdict === 'block';
