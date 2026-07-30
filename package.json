@@ -1,6 +1,6 @@
 {
   "name": "@veridex/agent-security",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Framework-agnostic agent security gateway — protect any AI agent with Veridex security packs, regardless of framework",
   "license": "MIT",
   "author": "Veridex Team",
